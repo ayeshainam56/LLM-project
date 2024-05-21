@@ -11,24 +11,22 @@ def chunk_text(text, chunk_size):
     chunks = [tokens[i:i + chunk_size] for i in range(0, len(tokens), chunk_size)]
     return [" ".join(chunk) for chunk in chunks]
 
-def embed_chunks(chunks, model, tokenizer):
+def embed_chunks(chunks, model, tokenizer, max_length):
     embeddings = []
     for chunk in chunks:
-        inputs = tokenizer(chunk, return_tensors="pt", truncation=True, padding=True)
+        inputs = tokenizer(chunk, return_tensors="pt", truncation=True, padding='max_length', max_length=max_length)
         with torch.no_grad():
             outputs = model.encode_text(inputs.input_ids)
         embeddings.append(outputs)
     return embeddings
 
-def combine_embeddings(embeddings):
-    combined_embedding = torch.mean(torch.stack(embeddings), dim=0)
-    return combined_embedding
-
 # Example usage
 query = "Your complex query goes here. It might be long, so we need to chunk it."
 chunk_size = 16  # Example chunk size
+max_length = 77  # Maximum token length for the model
 chunks = chunk_text(query, chunk_size)
-embeddings = embed_chunks(chunks, model, tokenizer)
-combined_embedding = combine_embeddings(embeddings)
+embeddings = embed_chunks(chunks, model, tokenizer, max_length)
 
-print(combined_embedding)
+# Now you have a list of embeddings without combining them
+for idx, embedding in enumerate(embeddings):
+    print(f"Embedding for chunk {idx}:\n{embedding}\n")
